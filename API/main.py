@@ -53,10 +53,13 @@ def validate_token(authorization: str = Header(None)):
     try:
         token = authorization.split(" ")[1]
         kid = jwt.get_unverified_header(token).get("kid")
+
         if not kid:
             raise HTTPException(status_code=401, detail="No kid in token header")
+        
         payload = jwt.decode(token, get_jwk_for_kid(kid), algorithms=[ALGORITHM])
         roles = payload.get("realm_access", {}).get("roles", [])
+        
         if "prothetic_user" not in roles:
             raise HTTPException(status_code=403, detail="Forbidden: insufficient role")
     except Exception as e:
